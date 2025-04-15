@@ -47,7 +47,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	csiv1a1 "github.com/ceph/ceph-csi-operator/api/v1alpha1"
 	csiv1b1 "github.com/ceph/ceph-csi-operator/api/v1beta1"
 	"github.com/ceph/ceph-csi-operator/internal/utils"
 )
@@ -111,17 +110,17 @@ func (r *DriverReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// request for drivers
 	driverDefaultsPredicate := predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
-			opConf, ok := e.Object.(*csiv1a1.OperatorConfig)
+			opConf, ok := e.Object.(*csiv1b1.OperatorConfig)
 			return ok && opConf.Spec.DriverSpecDefaults != nil
 		},
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			oldConf, oldOk := e.ObjectOld.(*csiv1a1.OperatorConfig)
-			newConf, newOk := e.ObjectNew.(*csiv1a1.OperatorConfig)
+			oldConf, oldOk := e.ObjectOld.(*csiv1b1.OperatorConfig)
+			newConf, newOk := e.ObjectNew.(*csiv1b1.OperatorConfig)
 			return !oldOk || !newOk ||
 				!reflect.DeepEqual(oldConf.Spec.DriverSpecDefaults, newConf.Spec.DriverSpecDefaults)
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			opConf, ok := e.Object.(*csiv1a1.OperatorConfig)
+			opConf, ok := e.Object.(*csiv1b1.OperatorConfig)
 			return ok && opConf.Spec.DriverSpecDefaults != nil
 		},
 		GenericFunc: func(event.GenericEvent) bool {
@@ -188,7 +187,7 @@ func (r *DriverReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			),
 		).
 		Watches(
-			&csiv1a1.OperatorConfig{},
+			&csiv1b1.OperatorConfig{},
 			enqueueAllDrivers,
 			builder.WithPredicates(driverDefaultsPredicate),
 		).
@@ -294,7 +293,7 @@ func (r *driverReconcile) LoadAndValidateDesiredState() error {
 	r.driverType = DriverType(strings.ToLower(matches[1]))
 
 	// Load operator configuration resource
-	opConfig := csiv1a1.OperatorConfig{}
+	opConfig := csiv1b1.OperatorConfig{}
 	opConfig.Name = operatorConfigName
 	opConfig.Namespace = operatorNamespace
 	if err := r.Get(r.ctx, client.ObjectKeyFromObject(&opConfig), &opConfig); client.IgnoreNotFound(err) != nil {
